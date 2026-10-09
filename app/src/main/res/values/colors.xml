@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand Primary (Signature Game Red) -->
+    <color name="brand_red">#E60012</color>
+    <color name="brand_red_dark">#B3000D</color>
+    <color name="brand_red_light">#FFF0F1</color>
+    <color name="brand_red_border">#FFCCD0</color>
+
+    <!-- Neutrals -->
+    <color name="pure_white">#FFFFFF</color>
+    <color name="surface_background">#F5F5F7</color>
+    <color name="card_background">#FFFFFF</color>
+    <color name="text_primary">#1C1C1E</color>
+    <color name="text_secondary">#8E8E93</color>
+    <color name="divider_color">#E5E5EA</color>
+
+    <!-- Accent Badges -->
+    <color name="badge_mission_bg">#FFF0F1</color>
+    <color name="badge_mission_text">#E60012</color>
+    <color name="badge_watchdog_bg">#FFF8E1</color>
+    <color name="badge_watchdog_text">#F57F17</color>
+</resources>
