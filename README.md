@@ -1,2 +1,2 @@
 # Spring Up - Android
-Personal project alarm app, still have many bugs to be fixed
+Personal project alarm app to get familiar with Android Native (Java)
