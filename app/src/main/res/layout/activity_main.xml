@@ -7,7 +7,7 @@
     android:layout_height="match_parent"
     android:background="@color/surface_background">
 
-    <!-- Top App Bar / Brand Header -->
+    <!-- Top App Bar -->
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -17,36 +17,34 @@
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize">
+            android:layout_height="?attr/actionBarSize"
+            android:paddingHorizontal="16dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingEnd="16dp">
+                android:orientation="horizontal">
+
+                <!-- Brand mark icon from asset kit -->
+                <ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:src="@drawable/ic_springup_brand_mark"
+                    android:contentDescription="Spring Up logo"
+                    app:tint="@color/brand_red" />
 
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="SPRING UP"
-                    android:textColor="@color/brand_red"
-                    android:textSize="22sp"
-                    android:textStyle="bold" />
+                    android:layout_marginStart="10dp"
+                    android:text="Spring Up"
+                    android:fontFamily="sans-serif-black"
+                    android:textColor="@color/text_primary"
+                    android:textSize="20sp"
+                    android:letterSpacing="-0.01" />
 
-                <!-- Synchronized Streak Counter -->
-                <TextView
-                    android:id="@+id/tvStreakCounter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_badge_mission"
-                    android:paddingHorizontal="10dp"
-                    android:paddingVertical="4dp"
-                    android:text="🔥 0 DAYS"
-                    android:textColor="@color/brand_red"
-                    android:textSize="13sp"
-                    android:textStyle="bold" />
             </LinearLayout>
         </androidx.appcompat.widget.Toolbar>
 
@@ -56,23 +54,22 @@
             android:background="@color/divider_color" />
     </com.google.android.material.appbar.AppBarLayout>
 
-    <!-- Main Content Area -->
+    <!-- Main Content -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <!-- RecyclerView -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvAlarms"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
             android:paddingTop="8dp"
-            android:paddingBottom="96dp"
+            android:paddingBottom="100dp"
             tools:listitem="@layout/item_alarm" />
 
-        <!-- Empty State Prompt -->
+        <!-- Empty State -->
         <LinearLayout
             android:id="@+id/layoutEmptyState"
             android:layout_width="wrap_content"
@@ -82,25 +79,32 @@
             android:orientation="vertical"
             android:visibility="gone">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="No Alarms Configured"
-                android:textColor="@color/text_primary"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+            <ImageView
+                android:layout_width="160dp"
+                android:layout_height="160dp"
+                android:src="@drawable/spring_up_empty_state"
+                android:contentDescription="No alarms" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:text="Tap the + button to build your first mission"
+                android:layout_marginTop="16dp"
+                android:text="No Alarms Set"
+                android:fontFamily="sans-serif-black"
+                android:textColor="@color/text_primary"
+                android:textSize="20sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="Tap + to build your first alarm mission"
                 android:textColor="@color/text_secondary"
                 android:textSize="14sp" />
         </LinearLayout>
     </FrameLayout>
 
-    <!-- Floating Action Button -->
+    <!-- FAB -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabAddAlarm"
         android:layout_width="wrap_content"

@@ -32,6 +32,6 @@ public interface AlarmDao {
     @Delete
     void delete(AlarmEntity alarm);
 
-    @Query("UPDATE alarms SET is_enabled = :isEnabled, is_synced = 0 WHERE id = :id")
+    @Query("UPDATE alarms SET is_enabled = :isEnabled WHERE id = :id")
     void updateAlarmStatus(long id, boolean isEnabled);
 }

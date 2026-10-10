@@ -5,62 +5,65 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/surface_background"
-    android:padding="24dp">
+    android:background="@drawable/bg_springup_sunrise"
+    android:padding="20dp">
 
-    <!-- Header Section -->
+    <!-- Time -->
     <TextView
         android:id="@+id/tvRingingAlarmTime"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="24dp"
+        android:fontFamily="sans-serif-black"
         android:textColor="@color/text_primary"
-        android:textSize="54sp"
-        android:textStyle="bold"
+        android:textSize="64sp"
+        android:letterSpacing="-0.03"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="06:30" />
 
+    <!-- Alarm title (small subtitle) -->
     <TextView
         android:id="@+id/tvRingingAlarmTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="2dp"
         android:textColor="@color/text_secondary"
-        android:textSize="18sp"
+        android:textSize="15sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvRingingAlarmTime"
-        tools:text="Arcade Morning Gauntlet" />
+        tools:text="Morning Wake Up" />
 
-    <!-- Mission Stage Badge -->
+    <!-- Stage Badge -->
     <TextView
         android:id="@+id/tvCurrentStageIndicator"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:background="@drawable/bg_badge_mission"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/bg_springup_mission_badge"
         android:paddingHorizontal="16dp"
-        android:paddingVertical="8dp"
+        android:paddingVertical="6dp"
         android:textColor="@color/badge_mission_text"
-        android:textSize="14sp"
+        android:textSize="12sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvRingingAlarmTitle"
-        tools:text="STAGE 1 OF 2: MATH MISSION" />
+        tools:text="STAGE 1 OF 2 · MATH" />
 
-    <!-- Mission Container Card -->
+    <!-- Mission Card -->
     <com.google.android.material.card.MaterialCardView
         android:id="@+id/cardMissionContainer"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginVertical="24dp"
+        android:layout_marginTop="14dp"
+        android:layout_marginBottom="10dp"
         app:cardBackgroundColor="@color/card_background"
-        app:cardCornerRadius="20dp"
+        app:cardCornerRadius="24dp"
         app:cardElevation="4dp"
-        app:layout_constraintBottom_toTopOf="@+id/tvMissionProgress"
+        app:layout_constraintBottom_toTopOf="@id/tvMissionProgress"
         app:layout_constraintTop_toBottomOf="@id/tvCurrentStageIndicator"
         app:strokeColor="@color/brand_red_border"
         app:strokeWidth="1dp">
@@ -70,7 +73,7 @@
             android:layout_height="match_parent"
             android:padding="20dp">
 
-            <!-- 1. Math Mission View -->
+            <!-- 1. Math Mission -->
             <LinearLayout
                 android:id="@+id/layoutMathMission"
                 android:layout_width="match_parent"
@@ -79,19 +82,27 @@
                 android:orientation="vertical"
                 android:visibility="visible">
 
+                <ImageView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:src="@drawable/ic_mission_math"
+                    android:layout_marginBottom="16dp"
+                    android:contentDescription="Math mission"
+                    app:tint="@color/brand_red" />
+
                 <TextView
                     android:id="@+id/tvMathEquation"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-black"
                     android:textColor="@color/text_primary"
                     android:textSize="40sp"
-                    android:textStyle="bold"
                     tools:text="18 + 24 = ?" />
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="24dp"
+                    android:layout_marginTop="16dp"
                     app:boxStrokeColor="@color/brand_red"
                     app:hintTextColor="@color/brand_red">
 
@@ -100,7 +111,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
-                        android:hint="Enter Solution"
+                        android:hint="Your answer"
                         android:inputType="numberSigned"
                         android:textSize="22sp" />
                 </com.google.android.material.textfield.TextInputLayout>
@@ -108,16 +119,16 @@
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnSubmitMath"
                     android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    android:layout_marginTop="20dp"
+                    android:layout_height="52dp"
+                    android:layout_marginTop="14dp"
                     android:backgroundTint="@color/brand_red"
-                    android:text="SUBMIT ANSWER"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    app:cornerRadius="12dp" />
+                    android:fontFamily="sans-serif-black"
+                    android:text="SUBMIT"
+                    android:textSize="15sp"
+                    app:cornerRadius="14dp" />
             </LinearLayout>
 
-            <!-- 2. Power Shake Mission View -->
+            <!-- 2. Shake Mission -->
             <LinearLayout
                 android:id="@+id/layoutShakeMission"
                 android:layout_width="match_parent"
@@ -126,55 +137,79 @@
                 android:orientation="vertical"
                 android:visibility="gone">
 
+                <ImageView
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:src="@drawable/ic_mission_shake"
+                    android:layout_marginBottom="16dp"
+                    android:contentDescription="Shake mission"
+                    app:tint="@color/brand_red" />
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="⚡ SHAKE YOUR PHONE!"
+                    android:text="SHAKE YOUR PHONE!"
+                    android:fontFamily="sans-serif-black"
                     android:textColor="@color/brand_red"
-                    android:textSize="22sp"
-                    android:textStyle="bold" />
+                    android:textSize="20sp" />
 
                 <TextView
                     android:id="@+id/tvShakeCounter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="12dp"
+                    android:fontFamily="sans-serif-black"
                     android:textColor="@color/text_primary"
-                    android:textSize="48sp"
-                    android:textStyle="bold"
-                    tools:text="30" />
+                    android:textSize="56sp"
+                    tools:text="25" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="shakes remaining"
                     android:textColor="@color/text_secondary"
-                    android:textSize="16sp" />
+                    android:textSize="14sp" />
 
                 <com.google.android.material.progressindicator.LinearProgressIndicator
                     android:id="@+id/progressShake"
                     android:layout_width="match_parent"
-                    android:layout_height="12dp"
-                    android:layout_marginTop="32dp"
+                    android:layout_height="10dp"
+                    android:layout_marginTop="24dp"
                     app:indicatorColor="@color/brand_red"
                     app:trackColor="@color/brand_red_light"
-                    app:trackCornerRadius="6dp" />
+                    app:trackCornerRadius="5dp" />
             </LinearLayout>
 
         </FrameLayout>
     </com.google.android.material.card.MaterialCardView>
 
-    <!-- Sub-status / Progress Text -->
+    <!-- Sub-progress -->
     <TextView
         android:id="@+id/tvMissionProgress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
+        android:layout_marginBottom="10dp"
         android:textColor="@color/text_secondary"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:textSize="13sp"
+        app:layout_constraintBottom_toTopOf="@id/btnSnooze"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        tools:text="Equation 1 of 3" />
+        tools:text="Problem 1 of 3" />
+
+    <!-- Snooze -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSnooze"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginBottom="8dp"
+        android:backgroundTint="@color/card_background"
+        android:text="SNOOZE 5M (3 LEFT)"
+        android:textColor="@color/brand_red"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:cornerRadius="14dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:strokeColor="@color/brand_red"
+        app:strokeWidth="1.5dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

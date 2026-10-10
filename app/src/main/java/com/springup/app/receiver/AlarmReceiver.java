@@ -17,7 +17,7 @@ public class AlarmReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         long alarmId = intent.getLongExtra(AlarmScheduler.EXTRA_ALARM_ID, -1L);
 
-        // 1. Acquire temporary 10s wakelock to ensure CPU stays on for the handoff
+        // 1. Acquire temporary 10-second wakelock to keep CPU active during screen/service handoff
         PowerManager powerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         if (powerManager != null) {
             PowerManager.WakeLock wakeLock = powerManager.newWakeLock(
@@ -27,15 +27,18 @@ public class AlarmReceiver extends BroadcastReceiver {
             wakeLock.acquire(10 * 1000L);
         }
 
-        // 2. Start the foreground audio & vibration service
+        // 2. Start the foreground audio and vibration service (passes volume, vibrate, custom audio)
         Intent serviceIntent = new Intent(context, AlarmRingingService.class);
         if (intent.getExtras() != null) {
             serviceIntent.putExtras(intent.getExtras());
         }
         ContextCompat.startForegroundService(context, serviceIntent);
 
-        // 3. Force-launch RingingActivity directly to the foreground
+        // 3. Launch RingingActivity over the lock screen (preserves snooze count and alarm IDs)
         Intent activityIntent = new Intent(context, RingingActivity.class);
+        if (intent.getExtras() != null) {
+            activityIntent.putExtras(intent.getExtras());
+        }
         activityIntent.putExtra(AlarmScheduler.EXTRA_ALARM_ID, alarmId);
         activityIntent.addFlags(
                 Intent.FLAG_ACTIVITY_NEW_TASK |

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="springup_launcher_background">#1E1E25</color>
+    <color name="springup_brand_red">#FF4C59</color>
+    <color name="springup_brand_red_dark">#E60012</color>
+    <color name="springup_brand_tint">#3D2025</color>
+    <color name="springup_brand_border">#693039</color>
+    <color name="springup_sunrise_top">#24212A</color>
+    <color name="springup_sunrise_mid">#33232B</color>
+    <color name="springup_sunrise_bottom">#4A292D</color>
+    <color name="springup_surface_background">#121216</color>
+    <color name="springup_surface_card">#1E1E25</color>
+    <color name="springup_text_primary">#F7F7FA</color>
+    <color name="springup_text_secondary">#B6B6C2</color>
+    <color name="springup_divider">#383842</color>
+    <color name="springup_watchdog_amber">#FFB74D</color>
+    <color name="springup_watchdog_tint">#3A2B1B</color>
+    <color name="springup_success">#75C9A4</color>
+</resources>

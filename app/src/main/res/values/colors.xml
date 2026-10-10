@@ -19,4 +19,11 @@
     <color name="badge_mission_text">#E60012</color>
     <color name="badge_watchdog_bg">#FFF8E1</color>
     <color name="badge_watchdog_text">#F57F17</color>
+
+    <!-- Switch Disabled Track -->
+    <color name="switch_disabled_track">#C7C7CC</color>
+
+    <!-- Success / Watchdog amber -->
+    <color name="mission_success">#2F7D5C</color>
+    <color name="watchdog_amber">#F57F17</color>
 </resources>

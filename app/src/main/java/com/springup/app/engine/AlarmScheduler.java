@@ -16,7 +16,6 @@ import com.springup.app.R;
 import com.springup.app.data.local.entity.AlarmEntity;
 import com.springup.app.receiver.AlarmReceiver;
 import com.springup.app.receiver.WakeUpCheckReceiver;
-import com.springup.app.receiver.WatchdogDismissReceiver;
 import com.springup.app.service.AlarmRingingService;
 
 import java.util.Calendar;
@@ -28,6 +27,7 @@ public class AlarmScheduler {
     public static final String EXTRA_VOLUME = "EXTRA_VOLUME";
     public static final String EXTRA_VIBRATE = "EXTRA_VIBRATE";
     public static final String WATCHDOG_CHANNEL_ID = "SPRING_UP_WATCHDOG_CHANNEL";
+    public static final String EXTRA_CUSTOM_RINGTONE_URI = "EXTRA_CUSTOM_RINGTONE_URI";
 
     public static void scheduleAlarm(Context context, AlarmEntity alarm) {
         if (!alarm.isEnabled()) return;
@@ -37,9 +37,11 @@ public class AlarmScheduler {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (!alarmManager.canScheduleExactAlarms()) {
-                Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.startActivity(intent);
+                try {
+                    Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(intent);
+                } catch (Exception ignored) {}
                 return;
             }
         }
@@ -51,6 +53,7 @@ public class AlarmScheduler {
         intent.putExtra(EXTRA_ALARM_TITLE, alarm.getTitle());
         intent.putExtra(EXTRA_VOLUME, alarm.getVolumeLevel());
         intent.putExtra(EXTRA_VIBRATE, alarm.isVibrate());
+        intent.putExtra(EXTRA_CUSTOM_RINGTONE_URI, alarm.getRingtoneUri());
 
         PendingIntent operation = PendingIntent.getBroadcast(
                 context,
@@ -89,11 +92,17 @@ public class AlarmScheduler {
         Intent stopIntent = new Intent(context, AlarmRingingService.class);
         stopIntent.setAction(AlarmRingingService.ACTION_STOP_ALARM);
         context.startService(stopIntent);
+        context.stopService(stopIntent);
     }
+
+    public static final int WATCHDOG_PENDING_CODE = 999888;
 
     public static void scheduleWakeUpCheck(Context context, long alarmId, int delayMinutes) {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         if (alarmManager == null) return;
+
+        // Cancel any pending watchdog check from earlier alarms so only the latest alarm is monitored
+        cancelWakeUpCheck(context, alarmId);
 
         long triggerMillis = System.currentTimeMillis() + (delayMinutes * 60 * 1000L);
 
@@ -102,14 +111,23 @@ public class AlarmScheduler {
 
         PendingIntent operation = PendingIntent.getBroadcast(
                 context,
-                (int) (alarmId + 100000),
+                WATCHDOG_PENDING_CODE,
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
-        alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerMillis, operation);
+        Intent showIntent = new Intent(context, MainActivity.class);
+        PendingIntent showOperation = PendingIntent.getActivity(
+                context,
+                WATCHDOG_PENDING_CODE,
+                showIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
 
-        showWatchdogNotification(context, alarmId, delayMinutes);
+        AlarmManager.AlarmClockInfo clockInfo = new AlarmManager.AlarmClockInfo(triggerMillis, showOperation);
+        alarmManager.setAlarmClock(clockInfo, operation);
+
+        showWatchdogStandbyNotification(context, alarmId, delayMinutes);
     }
 
     public static void cancelWakeUpCheck(Context context, long alarmId) {
@@ -118,20 +136,20 @@ public class AlarmScheduler {
             Intent intent = new Intent(context, WakeUpCheckReceiver.class);
             PendingIntent operation = PendingIntent.getBroadcast(
                     context,
-                    (int) (alarmId + 100000),
+                    WATCHDOG_PENDING_CODE,
                     intent,
                     PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
             );
             alarmManager.cancel(operation);
         }
 
-        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        if (notificationManager != null) {
-            notificationManager.cancel((int) (alarmId + 200000));
+        NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (manager != null) {
+            manager.cancel((int) (alarmId + 200000));
         }
     }
 
-    private static void showWatchdogNotification(Context context, long alarmId, int delayMinutes) {
+    private static void showWatchdogStandbyNotification(Context context, long alarmId, int delayMinutes) {
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (manager == null) return;
 
@@ -141,29 +159,18 @@ public class AlarmScheduler {
                     "Anti-Relapse Watchdog",
                     NotificationManager.IMPORTANCE_HIGH
             );
-            channel.setDescription("Prompts to confirm wakefulness after alarm mission completion");
+            channel.setDescription("Wakefulness verification alerts");
             manager.createNotificationChannel(channel);
         }
 
-        Intent disarmIntent = new Intent(context, WatchdogDismissReceiver.class);
-        disarmIntent.setAction(WatchdogDismissReceiver.ACTION_DISARM_WATCHDOG);
-        disarmIntent.putExtra(EXTRA_ALARM_ID, alarmId);
-
-        PendingIntent disarmPendingIntent = PendingIntent.getBroadcast(
-                context,
-                (int) (alarmId + 300000),
-                disarmIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-        );
-
+        // Informational only: CANNOT be cancelled or dismissed by the user during the 5 minutes
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, WATCHDOG_CHANNEL_ID)
                 .setSmallIcon(R.mipmap.ic_launcher)
-                .setContentTitle("Watchdog Active (" + delayMinutes + "m)")
-                .setContentText("Tap 'I'M AWAKE' to prevent emergency re-ring!")
+                .setContentTitle("Watchdog Active (5m Standby)")
+                .setContentText("Check-in required in " + delayMinutes + " minutes. Stay awake!")
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setOngoing(true)
-                .setAutoCancel(false)
-                .addAction(android.R.drawable.ic_media_play, "I'M AWAKE", disarmPendingIntent);
+                .setAutoCancel(false);
 
         manager.notify((int) (alarmId + 200000), builder.build());
     }

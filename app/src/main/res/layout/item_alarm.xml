@@ -6,26 +6,28 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginHorizontal="16dp"
-    android:layout_marginVertical="8dp"
+    android:layout_marginVertical="6dp"
     app:cardBackgroundColor="@color/card_background"
-    app:cardCornerRadius="16dp"
-    app:cardElevation="2dp"
+    app:cardCornerRadius="20dp"
+    app:cardElevation="3dp"
     app:strokeColor="@color/divider_color"
     app:strokeWidth="1dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="16dp">
 
-        <!-- Time & Period -->
+        <!-- Time Display -->
         <TextView
             android:id="@+id/tvAlarmTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-black"
             android:textColor="@color/text_primary"
-            android:textSize="36sp"
-            android:textStyle="bold"
+            android:textSize="42sp"
+            android:letterSpacing="-0.02"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="06:30" />
@@ -34,74 +36,77 @@
             android:id="@+id/tvAlarmPeriod"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="6dp"
-            android:layout_marginBottom="6dp"
+            android:layout_marginStart="5dp"
+            android:layout_marginBottom="8dp"
             android:textColor="@color/brand_red"
-            android:textSize="14sp"
+            android:textSize="15sp"
             android:textStyle="bold"
             app:layout_constraintBottom_toBottomOf="@id/tvAlarmTime"
             app:layout_constraintStart_toEndOf="@id/tvAlarmTime"
             tools:text="AM" />
 
-        <!-- Toggle Switch -->
+        <TextView
+            android:id="@+id/tvRingIn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_marginBottom="8dp"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            app:layout_constraintBottom_toBottomOf="@id/tvAlarmTime"
+            app:layout_constraintStart_toEndOf="@id/tvAlarmPeriod"
+            tools:text="• Ring in 7h 30m" />
+
+        <!-- Toggle Switch (gray off / red on) -->
         <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/switchAlarmEnabled"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/tvAlarmTime"
+            app:layout_constraintTop_toTopOf="parent"
             app:thumbTint="@color/pure_white"
-            app:trackTint="@color/brand_red" />
+            app:trackTint="@drawable/selector_switch_track" />
 
-        <!-- Title & Repeat Days -->
+        <!-- Repeat Days (compact single-letter) -->
         <TextView
-            android:id="@+id/tvAlarmTitle"
+            android:id="@+id/tvAlarmDays"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             android:layout_marginEnd="12dp"
-            android:ellipsize="end"
-            android:maxLines="1"
-            android:textColor="@color/text_primary"
-            android:textSize="16sp"
-            android:textStyle="bold"
+            android:fontFamily="monospace"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
             app:layout_constraintEnd_toStartOf="@id/switchAlarmEnabled"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvAlarmTime"
-            tools:text="Wake Up Gauntlet" />
+            tools:text="M  T  W  T  F  ·  ·" />
 
-        <TextView
-            android:id="@+id/tvAlarmDays"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:textColor="@color/text_secondary"
-            android:textSize="13sp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvAlarmTitle"
-            tools:text="Mon, Tue, Wed, Thu, Fri" />
-
-        <!-- Badges Container -->
+        <!-- Badges Row -->
         <LinearLayout
             android:id="@+id/layoutBadges"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="10dp"
             android:orientation="horizontal"
+            android:gravity="center_vertical"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvAlarmDays">
 
-            <!-- Mission Gauntlet Badge -->
+            <!-- Mission Badge (icon only + count) -->
             <TextView
                 android:id="@+id/tvMissionSummaryBadge"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_badge_mission"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
                 android:textColor="@color/badge_mission_text"
                 android:textSize="12sp"
                 android:textStyle="bold"
-                tools:text="3 MISSIONS (MATH • SHAKE)" />
+                android:visibility="gone"
+                tools:text="2 MISSIONS" />
 
             <!-- Watchdog Badge -->
             <TextView
@@ -110,10 +115,14 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:background="@drawable/bg_badge_watchdog"
-                android:text="WATCHDOG 5M"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
+                android:visibility="gone"
                 android:textColor="@color/badge_watchdog_text"
                 android:textSize="12sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                tools:text="WATCHDOG 5M" />
+
         </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,9 +1,15 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.SpringUp" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="colorPrimary">@color/brand_red</item>
+        <item name="colorSecondary">@color/watchdog_amber</item>
     </style>
 
     <style name="Theme.SpringUp" parent="Base.Theme.SpringUp" />
+
+    <!-- Day toggle button style for the M T W T F S S row -->
+    <style name="Widget.App.DayToggle" parent="">
+        <item name="android:background">@drawable/selector_day_toggle</item>
+        <item name="android:textColor">@drawable/selector_day_toggle_text</item>
+    </style>
 </resources>

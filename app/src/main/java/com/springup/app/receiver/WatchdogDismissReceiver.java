@@ -16,15 +16,15 @@ public class WatchdogDismissReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         long alarmId = intent.getLongExtra(AlarmScheduler.EXTRA_ALARM_ID, -1L);
 
-        // 1. Cancel the hardware timer
+        // 1. Cancel the watchdog and the 60-second re-ring fallback
         AlarmScheduler.cancelWakeUpCheck(context, alarmId);
 
-        // 2. Clear the heads-up notification
+        // 2. Clear notification
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (notificationManager != null) {
             notificationManager.cancel((int) (alarmId + 200000));
         }
 
-        Toast.makeText(context, "Watchdog disarmed. Stay sharp!", Toast.LENGTH_LONG).show();
+        Toast.makeText(context, "Wakefulness confirmed! Watchdog disarmed.", Toast.LENGTH_LONG).show();
     }
 }

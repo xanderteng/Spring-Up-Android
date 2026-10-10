@@ -72,6 +72,18 @@ public class AlarmRepository {
         });
     }
 
+    public void update(AlarmEntity alarm) {
+        AppDatabase.databaseWriteExecutor.execute(() -> {
+            alarmDao.update(alarm);
+            if (alarm.isEnabled()) {
+                AlarmScheduler.scheduleAlarm(application, alarm);
+            } else {
+                AlarmScheduler.cancelAlarm(application, alarm.getId());
+                AlarmScheduler.cancelWakeUpCheck(application, alarm.getId());
+            }
+        });
+    }
+
     public void toggleAlarm(long id, boolean isEnabled) {
         AppDatabase.databaseWriteExecutor.execute(() -> {
             alarmDao.updateAlarmStatus(id, isEnabled);
