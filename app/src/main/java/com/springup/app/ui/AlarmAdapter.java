@@ -49,8 +49,11 @@ public class AlarmAdapter extends ListAdapter<AlarmEntity, AlarmAdapter.AlarmVie
                     && oldItem.isEnabled() == newItem.isEnabled()
                     && oldItem.getRepeatDaysMask() == newItem.getRepeatDaysMask()
                     && oldItem.isWakeUpCheckEnabled() == newItem.isWakeUpCheckEnabled()
+                    && oldItem.getWakeUpCheckDelayMinutes() == newItem.getWakeUpCheckDelayMinutes()
                     && oldItem.getVolumeLevel() == newItem.getVolumeLevel()
-                    && (oldItem.getTitle() != null && oldItem.getTitle().equals(newItem.getTitle()));
+                    && java.util.Objects.equals(oldItem.getTitle(), newItem.getTitle())
+                    && java.util.Objects.equals(oldItem.getRingtoneUri(), newItem.getRingtoneUri())
+                    && java.util.Objects.equals(oldItem.getMissions(), newItem.getMissions());
         }
     };
 
@@ -210,7 +213,7 @@ public class AlarmAdapter extends ListAdapter<AlarmEntity, AlarmAdapter.AlarmVie
         hours = hours % 24;
         long minutes = diffMinutes % 60;
 
-        StringBuilder sb = new StringBuilder("Ring in ");
+        StringBuilder sb = new StringBuilder("In ");
         if (days > 0) sb.append(days).append("d ");
         if (hours > 0) sb.append(hours).append("h ");
         sb.append(minutes).append("m");

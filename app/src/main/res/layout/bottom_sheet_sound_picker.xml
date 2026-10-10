@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_springup_surface"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:maxHeight="600dp">
+
+    <!-- Bottom sheet drag handle -->
+    <View
+        android:layout_width="36dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="16dp"
+        android:background="#D1D1D6" />
+
+    <!-- Title Header -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-black"
+        android:text="Alarm Sound"
+        android:textColor="@color/text_primary"
+        android:textSize="22sp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="16dp"
+        android:text="Choose from saved tones or import a new file"
+        android:textColor="@color/text_secondary"
+        android:textSize="13sp" />
+
+    <!-- Import from Files Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardImportFromFiles"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:clickable="true"
+        android:focusable="true"
+        app:cardBackgroundColor="@color/brand_red_light"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="0dp"
+        app:strokeColor="@color/brand_red_border"
+        app:strokeWidth="1.5dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="14dp">
+
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_music_note"
+                app:tint="@color/brand_red" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-bold"
+                    android:text="Choose from Files..."
+                    android:textColor="@color/brand_red"
+                    android:textSize="15sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1dp"
+                    android:text="Pick MP3, WAV, M4A from your device storage"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="+"
+                android:textColor="@color/brand_red"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:fontFamily="sans-serif-bold"
+        android:letterSpacing="0.05"
+        android:text="SAVED TONES"
+        android:textColor="@color/text_secondary"
+        android:textSize="11sp" />
+
+    <!-- Saved Sounds List -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvSavedSounds"
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:nestedScrollingEnabled="true"
+        tools:listitem="@layout/item_saved_sound" />
+
+    <!-- Confirm button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnConfirmSound"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginTop="16dp"
+        android:backgroundTint="@color/brand_red"
+        android:fontFamily="sans-serif-black"
+        android:text="USE SELECTED TONE"
+        android:textSize="15sp"
+        app:cornerRadius="16dp" />
+
+</LinearLayout>

@@ -214,7 +214,7 @@ public class MainActivity extends AppCompatActivity {
     private void setupViewModel() {
         viewModel = new ViewModelProvider(this).get(AlarmViewModel.class);
         viewModel.getAllAlarms().observe(this, alarms -> {
-            adapter.submitList(alarms);
+            adapter.submitList(alarms != null ? new java.util.ArrayList<>(alarms) : null);
             binding.layoutEmptyState.setVisibility(
                     (alarms == null || alarms.isEmpty()) ? View.VISIBLE : View.GONE
             );

@@ -113,7 +113,7 @@ public class WatchdogActivity extends AppCompatActivity {
                     .setUsage(AudioAttributes.USAGE_ALARM)
                     .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                     .build());
-            alertPlayer.setLooping(true);
+            alertPlayer.setLooping(false);
             alertPlayer.prepare();
             alertPlayer.start();
         } catch (Exception ignored) {}

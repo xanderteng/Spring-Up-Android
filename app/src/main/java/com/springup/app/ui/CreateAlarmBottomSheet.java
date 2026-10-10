@@ -2,6 +2,7 @@ package com.springup.app.ui;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.GestureDetector;
@@ -53,11 +54,13 @@ public class CreateAlarmBottomSheet extends BottomSheetDialogFragment {
     private TextView dayMon, dayTue, dayWed, dayThu, dayFri, daySat, daySun;
 
     // Mission switches + config
-    private MaterialSwitch switchMissionMath, switchMissionShake, switchWatchdog;
+    private MaterialSwitch switchMissionMath, switchMissionShake, switchMissionBarcode, switchWatchdog;
     private SeekBar seekMathDifficulty, seekShakeCount, seekVolume;
     private TextView tvMathDifficultyLabel, tvShakeCountLabel, tvVolumeLabel;
     private TextView tvMathCount, tvShakeCount;
-    private View layoutMathDifficulty, layoutShakeConfig;
+    private View layoutMathDifficulty, layoutShakeConfig, layoutBarcodeConfig;
+    private TextInputEditText etTargetBarcode;
+    private MaterialButton btnScanTargetBarcode;
 
     private TextView tvSelectedTime;
     private TextView tvRingInInfo;
@@ -66,17 +69,13 @@ public class CreateAlarmBottomSheet extends BottomSheetDialogFragment {
     private MaterialButton btnPickAudio;
     private MaterialButton btnSaveAlarm;
 
-    private final ActivityResultLauncher<String> audioPickerLauncher =
-            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
-                if (uri != null) {
-                    String permanentUri = AudioStorageHelper.copyAudioToInternalStorage(requireContext(), uri);
-                    if (permanentUri != null) {
-                        selectedRingtoneUri = permanentUri;
-                        String name = AudioStorageHelper.getFileName(requireContext(), uri);
-                        tvSelectedAudioName.setText(name != null ? name : "Custom Song Selected");
-                        Toast.makeText(requireContext(), "Imported to app storage!", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(requireContext(), "Failed to read audio file", Toast.LENGTH_SHORT).show();
+    private final ActivityResultLauncher<Intent> barcodeScannerLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == android.app.Activity.RESULT_OK && result.getData() != null) {
+                    String scanned = result.getData().getStringExtra(BarcodeScannerActivity.EXTRA_SCANNED_VALUE);
+                    if (scanned != null && !scanned.trim().isEmpty()) {
+                        etTargetBarcode.setText(scanned.trim());
+                        Toast.makeText(requireContext(), "Barcode Captured: " + scanned.trim(), Toast.LENGTH_SHORT).show();
                     }
                 }
             });
@@ -124,9 +123,10 @@ public class CreateAlarmBottomSheet extends BottomSheetDialogFragment {
         daySat = view.findViewById(R.id.daySat);
         daySun = view.findViewById(R.id.daySun);
 
-        switchMissionMath  = view.findViewById(R.id.switchMissionMath);
-        switchMissionShake = view.findViewById(R.id.switchMissionShake);
-        switchWatchdog     = view.findViewById(R.id.switchWatchdog);
+        switchMissionMath    = view.findViewById(R.id.switchMissionMath);
+        switchMissionShake   = view.findViewById(R.id.switchMissionShake);
+        switchMissionBarcode = view.findViewById(R.id.switchMissionBarcode);
+        switchWatchdog       = view.findViewById(R.id.switchWatchdog);
 
         seekMathDifficulty = view.findViewById(R.id.seekMathDifficulty);
         seekShakeCount     = view.findViewById(R.id.seekShakeCount);
@@ -140,10 +140,20 @@ public class CreateAlarmBottomSheet extends BottomSheetDialogFragment {
 
         layoutMathDifficulty = view.findViewById(R.id.layoutMathDifficulty);
         layoutShakeConfig    = view.findViewById(R.id.layoutShakeConfig);
+        layoutBarcodeConfig  = view.findViewById(R.id.layoutBarcodeConfig);
+        etTargetBarcode      = view.findViewById(R.id.etTargetBarcode);
+        btnScanTargetBarcode = view.findViewById(R.id.btnScanTargetBarcode);
 
         tvSelectedAudioName = view.findViewById(R.id.tvSelectedAudioName);
         btnPickAudio        = view.findViewById(R.id.btnPickAudio);
         btnSaveAlarm        = view.findViewById(R.id.btnSaveAlarm);
+
+        if (btnScanTargetBarcode != null) {
+            btnScanTargetBarcode.setOnClickListener(v -> {
+                Intent intent = new Intent(requireContext(), BarcodeScannerActivity.class);
+                barcodeScannerLauncher.launch(intent);
+            });
+        }
     }
 
     private void setupDayToggles() {
@@ -180,6 +190,9 @@ public class CreateAlarmBottomSheet extends BottomSheetDialogFragment {
         });
         switchMissionShake.setOnCheckedChangeListener((btn, checked) -> {
             layoutShakeConfig.setVisibility(checked ? View.VISIBLE : View.GONE);
+        });
+        switchMissionBarcode.setOnCheckedChangeListener((btn, checked) -> {
+            layoutBarcodeConfig.setVisibility(checked ? View.VISIBLE : View.GONE);
         });
     }
 
@@ -255,8 +268,9 @@ public class CreateAlarmBottomSheet extends BottomSheetDialogFragment {
 
             setDayMask(editingAlarm.getRepeatDaysMask());
 
-            boolean hasMath = false, hasShake = false;
+            boolean hasMath = false, hasShake = false, hasBarcode = false;
             int mathDiff = 0, shakeCount = 25;
+            String barcodeVal = "";
             if (editingAlarm.getMissions() != null) {
                 for (MissionModel m : editingAlarm.getMissions()) {
                     if ("MATH".equalsIgnoreCase(m.getMinigame())) {
@@ -267,6 +281,10 @@ public class CreateAlarmBottomSheet extends BottomSheetDialogFragment {
                         hasShake = true;
                         shakeCount = m.getRequiredCompletions() > 0 ? m.getRequiredCompletions() : 25;
                     }
+                    if ("BARCODE_SCAN".equalsIgnoreCase(m.getMinigame())) {
+                        hasBarcode = true;
+                        barcodeVal = m.getTargetBarcodeHash() != null ? m.getTargetBarcodeHash() : "";
+                    }
                 }
             }
             switchMissionMath.setChecked(hasMath);
@@ -276,6 +294,10 @@ public class CreateAlarmBottomSheet extends BottomSheetDialogFragment {
             switchMissionShake.setChecked(hasShake);
             seekShakeCount.setProgress(Math.max(0, shakeCount - 10));
             layoutShakeConfig.setVisibility(hasShake ? View.VISIBLE : View.GONE);
+
+            switchMissionBarcode.setChecked(hasBarcode);
+            etTargetBarcode.setText(barcodeVal);
+            layoutBarcodeConfig.setVisibility(hasBarcode ? View.VISIBLE : View.GONE);
 
             switchWatchdog.setChecked(editingAlarm.isWakeUpCheckEnabled());
 
@@ -293,8 +315,13 @@ public class CreateAlarmBottomSheet extends BottomSheetDialogFragment {
             btnSaveAlarm.setText("SAVE ALARM");
             // Default: weekdays on
             setDayMask(31); // Mon-Fri
-            switchMissionMath.setChecked(true);
-            switchMissionShake.setChecked(true);
+            switchMissionMath.setChecked(false);
+            switchMissionShake.setChecked(false);
+            switchMissionBarcode.setChecked(false);
+            etTargetBarcode.setText("");
+            layoutMathDifficulty.setVisibility(View.GONE);
+            layoutShakeConfig.setVisibility(View.GONE);
+            layoutBarcodeConfig.setVisibility(View.GONE);
             seekMathDifficulty.setProgress(0);
             seekShakeCount.setProgress(15); // 25 shakes
             seekVolume.setProgress(100);
@@ -366,7 +393,13 @@ public class CreateAlarmBottomSheet extends BottomSheetDialogFragment {
 
     private void setupAudioPicker() {
         if (btnPickAudio != null) {
-            btnPickAudio.setOnClickListener(v -> audioPickerLauncher.launch("audio/*"));
+            btnPickAudio.setOnClickListener(v -> {
+                SoundPickerBottomSheet sheet = SoundPickerBottomSheet.newInstance(selectedRingtoneUri, (uriStr, displayName) -> {
+                    selectedRingtoneUri = uriStr;
+                    tvSelectedAudioName.setText(displayName);
+                });
+                sheet.show(getChildFragmentManager(), "SOUND_PICKER_SHEET");
+            });
         }
     }
 
@@ -388,49 +421,41 @@ public class CreateAlarmBottomSheet extends BottomSheetDialogFragment {
                 int shakeCount = seekShakeCount.getProgress() + 10;
                 missions.add(new MissionModel(stepOrder++, "POWER_SHAKE", 1, shakeCount, null));
             }
-
-            if (missions.isEmpty()) {
-                Toast.makeText(getContext(), "Enable at least one mission!", Toast.LENGTH_SHORT).show();
-                return;
+            if (switchMissionBarcode.isChecked()) {
+                String bVal = etTargetBarcode.getText() != null ? etTargetBarcode.getText().toString().trim() : "";
+                if (bVal.isEmpty()) bVal = "8992753123456";
+                missions.add(new MissionModel(stepOrder++, "BARCODE_SCAN", 1, 1, bVal));
             }
 
             int volume = seekVolume.getProgress();
 
-            AlarmEntity alarmToSave;
+            AlarmEntity alarmToSave = new AlarmEntity(
+                    title,
+                    selectedHour,
+                    selectedMinute,
+                    true,
+                    mask,
+                    switchWatchdog.isChecked(),
+                    5,
+                    missions,
+                    true,
+                    volume,
+                    selectedRingtoneUri
+            );
             if (editingAlarm != null) {
-                editingAlarm.setTitle(title);
-                editingAlarm.setHour(selectedHour);
-                editingAlarm.setMinute(selectedMinute);
-                editingAlarm.setEnabled(true);
-                editingAlarm.setRepeatDaysMask(mask);
-                editingAlarm.setWakeUpCheckEnabled(switchWatchdog.isChecked());
-                editingAlarm.setWakeUpCheckDelayMinutes(5);
-                editingAlarm.setMissions(missions);
-                editingAlarm.setVibrate(true);
-                editingAlarm.setVolumeLevel(volume);
-                editingAlarm.setRingtoneUri(selectedRingtoneUri);
-                alarmToSave = editingAlarm;
-            } else {
-                alarmToSave = new AlarmEntity(
-                        title,
-                        selectedHour,
-                        selectedMinute,
-                        true,
-                        mask,
-                        switchWatchdog.isChecked(),
-                        5,
-                        missions,
-                        true,
-                        volume,
-                        selectedRingtoneUri
-                );
+                alarmToSave.setId(editingAlarm.getId());
+                alarmToSave.setServerId(editingAlarm.getServerId());
             }
 
             if (listener != null) {
                 listener.onAlarmCreated(alarmToSave);
             }
             String ringIn = AlarmAdapter.calculateRingIn(selectedHour, selectedMinute, mask);
-            Toast.makeText(requireContext(), "Alarm set! " + ringIn, Toast.LENGTH_SHORT).show();
+            Context ctx = getContext();
+            if (ctx != null) {
+                String msg = (editingAlarm != null ? "Alarm updated! " : "Alarm set! ") + ringIn;
+                Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show();
+            }
             dismiss();
         });
     }

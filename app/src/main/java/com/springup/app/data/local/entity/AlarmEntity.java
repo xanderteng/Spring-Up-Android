@@ -2,6 +2,7 @@ package com.springup.app.data.local.entity;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 import com.springup.app.data.local.model.MissionModel;
@@ -54,6 +55,7 @@ public class AlarmEntity {
     public AlarmEntity() {}
 
     // 10-Argument Constructor (falls back to default ringtone)
+    @Ignore
     public AlarmEntity(String title, int hour, int minute, boolean isEnabled, int repeatDaysMask,
                        boolean wakeUpCheckEnabled, int wakeUpCheckDelayMinutes,
                        List<MissionModel> missions, boolean vibrate, int volumeLevel) {
@@ -62,6 +64,7 @@ public class AlarmEntity {
     }
 
     // 11-Argument Constructor with Custom Audio
+    @Ignore
     public AlarmEntity(String title, int hour, int minute, boolean isEnabled, int repeatDaysMask,
                        boolean wakeUpCheckEnabled, int wakeUpCheckDelayMinutes,
                        List<MissionModel> missions, boolean vibrate, int volumeLevel, String ringtoneUri) {

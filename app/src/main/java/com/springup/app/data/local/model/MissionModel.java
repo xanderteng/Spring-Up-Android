@@ -27,4 +27,21 @@ public class MissionModel {
     public void setRequiredCompletions(int requiredCompletions) { this.requiredCompletions = requiredCompletions; }
     public String getTargetBarcodeHash() { return targetBarcodeHash; }
     public void setTargetBarcodeHash(String targetBarcodeHash) { this.targetBarcodeHash = targetBarcodeHash; }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MissionModel that = (MissionModel) o;
+        return stepOrder == that.stepOrder &&
+                difficulty == that.difficulty &&
+                requiredCompletions == that.requiredCompletions &&
+                java.util.Objects.equals(minigame, that.minigame) &&
+                java.util.Objects.equals(targetBarcodeHash, that.targetBarcodeHash);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(stepOrder, minigame, difficulty, requiredCompletions, targetBarcodeHash);
+    }
 }

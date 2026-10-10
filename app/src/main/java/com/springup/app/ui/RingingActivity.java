@@ -2,8 +2,10 @@ package com.springup.app.ui;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -15,8 +17,19 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.ResultPoint;
+import com.journeyapps.barcodescanner.BarcodeCallback;
+import com.journeyapps.barcodescanner.BarcodeResult;
+import com.journeyapps.barcodescanner.DefaultDecoderFactory;
+import java.util.Arrays;
+import java.util.Collection;
 
 import com.springup.app.data.local.AppDatabase;
 import com.springup.app.data.local.entity.AlarmEntity;
@@ -51,6 +64,21 @@ public class RingingActivity extends AppCompatActivity implements SensorEventLis
     private int currentMissionIndex = 0;
     private boolean isGauntletComplete = false;
     private int currentSnoozeCount = 0;
+    private boolean isRingingFlashOn = false;
+    private boolean isBarcodeScanningActive = false;
+    private String currentTargetBarcode = null;
+
+    private final ActivityResultLauncher<String> requestCameraPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    if (currentTargetBarcode != null) {
+                        startEmbeddedBarcodeScanner(currentTargetBarcode);
+                    }
+                } else {
+                    Toast.makeText(this, "Camera permission needed. You can enter code manually.", Toast.LENGTH_LONG).show();
+                    binding.layoutManualBarcodeEntry.setVisibility(View.VISIBLE);
+                }
+            });
 
     // Math Mission State
     private int mathTargetAnswer;
@@ -139,6 +167,9 @@ public class RingingActivity extends AppCompatActivity implements SensorEventLis
     protected void onPause() {
         super.onPause();
         unregisterShakeSensor();
+        if (binding != null && binding.ringingBarcodeScannerView != null) {
+            binding.ringingBarcodeScannerView.pause();
+        }
     }
 
     @Override
@@ -146,8 +177,12 @@ public class RingingActivity extends AppCompatActivity implements SensorEventLis
         super.onResume();
         if (!isGauntletComplete && currentMissionIndex < missionQueue.size()) {
             MissionModel currentMission = missionQueue.get(currentMissionIndex);
-            if (currentMission != null && "POWER_SHAKE".equalsIgnoreCase(currentMission.getMinigame())) {
-                registerShakeSensor();
+            if (currentMission != null) {
+                if ("POWER_SHAKE".equalsIgnoreCase(currentMission.getMinigame())) {
+                    registerShakeSensor();
+                } else if ("BARCODE_SCAN".equalsIgnoreCase(currentMission.getMinigame()) && isBarcodeScanningActive) {
+                    binding.ringingBarcodeScannerView.resume();
+                }
             }
         }
     }
@@ -186,19 +221,15 @@ public class RingingActivity extends AppCompatActivity implements SensorEventLis
                             String.format(Locale.US, "%02d:%02d", currentAlarm.getHour(), currentAlarm.getMinute())
                     );
                     binding.tvRingingAlarmTitle.setText(currentAlarm.getTitle());
-                    if (currentAlarm.getMissions() != null && !currentAlarm.getMissions().isEmpty()) {
+                    if (currentAlarm.getMissions() != null) {
                         missionQueue = new ArrayList<>(currentAlarm.getMissions());
                     } else {
-                        missionQueue = new ArrayList<>(Collections.singletonList(
-                                new MissionModel(1, "MATH", 1, 3, null)
-                        ));
+                        missionQueue = new ArrayList<>();
                     }
                 } else {
                     binding.tvRingingAlarmTime.setText("ALARM");
                     binding.tvRingingAlarmTitle.setText("Wake Up!");
-                    missionQueue = new ArrayList<>(Collections.singletonList(
-                            new MissionModel(1, "MATH", 1, 3, null)
-                    ));
+                    missionQueue = new ArrayList<>();
                 }
                 startMissionStage(0);
             });
@@ -207,6 +238,75 @@ public class RingingActivity extends AppCompatActivity implements SensorEventLis
 
     private void setupListeners() {
         binding.btnSubmitMath.setOnClickListener(v -> checkMathAnswer());
+        binding.btnSubmitBarcode.setOnClickListener(v -> checkBarcodeAnswer());
+        binding.btnDismissAlarm.setOnClickListener(v -> completeAllMissions());
+
+        binding.btnRingingToggleFlash.setOnClickListener(v -> {
+            isRingingFlashOn = !isRingingFlashOn;
+            if (isRingingFlashOn) {
+                binding.ringingBarcodeScannerView.setTorchOn();
+            } else {
+                binding.ringingBarcodeScannerView.setTorchOff();
+            }
+            binding.btnRingingToggleFlash.setAlpha(isRingingFlashOn ? 1.0f : 0.6f);
+        });
+
+        binding.btnToggleManualBarcode.setOnClickListener(v -> {
+            binding.layoutManualBarcodeEntry.setVisibility(View.VISIBLE);
+            binding.ringingBarcodeScannerView.pause();
+        });
+
+        binding.btnBackToCamera.setOnClickListener(v -> {
+            binding.layoutManualBarcodeEntry.setVisibility(View.GONE);
+            if (isBarcodeScanningActive) {
+                binding.ringingBarcodeScannerView.resume();
+            }
+        });
+    }
+
+    private void startEmbeddedBarcodeScanner(String target) {
+        currentTargetBarcode = target;
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA);
+            return;
+        }
+
+        isBarcodeScanningActive = true;
+        Collection<BarcodeFormat> formats = Arrays.asList(
+                BarcodeFormat.EAN_13, BarcodeFormat.EAN_8, BarcodeFormat.UPC_A,
+                BarcodeFormat.UPC_E, BarcodeFormat.CODE_128, BarcodeFormat.CODE_39,
+                BarcodeFormat.QR_CODE
+        );
+        binding.ringingBarcodeScannerView.getBarcodeView().setDecoderFactory(new DefaultDecoderFactory(formats));
+        binding.ringingBarcodeScannerView.decodeContinuous(new BarcodeCallback() {
+            @Override
+            public void barcodeResult(BarcodeResult result) {
+                if (!isBarcodeScanningActive || result.getText() == null) return;
+                String scanned = result.getText().trim();
+                if (scanned.isEmpty()) return;
+
+                boolean matched = false;
+                if (target == null || target.trim().isEmpty()) {
+                    matched = true;
+                } else {
+                    String sha = computeSha256(scanned);
+                    matched = scanned.equalsIgnoreCase(target) || (sha != null && sha.equalsIgnoreCase(target));
+                }
+
+                if (matched) {
+                    isBarcodeScanningActive = false;
+                    binding.ringingBarcodeScannerView.pause();
+                    Toast.makeText(RingingActivity.this, "Barcode Verified: " + scanned, Toast.LENGTH_SHORT).show();
+                    startMissionStage(currentMissionIndex + 1);
+                } else {
+                    Toast.makeText(RingingActivity.this, "Scanned: " + scanned + " (Not a match)", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void possibleResultPoints(List<ResultPoint> resultPoints) {}
+        });
+        binding.ringingBarcodeScannerView.resume();
     }
 
     private void setupSnoozeButton() {
@@ -249,6 +349,18 @@ public class RingingActivity extends AppCompatActivity implements SensorEventLis
     }
 
     private void startMissionStage(int index) {
+        if (missionQueue.isEmpty()) {
+            // 0 Missions: Normal alarm dismiss screen
+            binding.tvCurrentStageIndicator.setText("WAKE UP");
+            binding.layoutNoMission.setVisibility(View.VISIBLE);
+            binding.layoutMathMission.setVisibility(View.GONE);
+            binding.layoutShakeMission.setVisibility(View.GONE);
+            binding.layoutBarcodeMission.setVisibility(View.GONE);
+            binding.tvMissionProgress.setVisibility(View.GONE);
+            unregisterShakeSensor();
+            return;
+        }
+
         if (index >= missionQueue.size()) {
             completeAllMissions();
             return;
@@ -259,23 +371,56 @@ public class RingingActivity extends AppCompatActivity implements SensorEventLis
         binding.tvCurrentStageIndicator.setText(String.format(Locale.US, "STAGE %d OF %d: %s",
                 index + 1, missionQueue.size(), mission.getMinigame()));
 
+        if (binding.ringingBarcodeScannerView != null) {
+            binding.ringingBarcodeScannerView.pause();
+        }
+        isBarcodeScanningActive = false;
+
         if ("MATH".equalsIgnoreCase(mission.getMinigame())) {
+            binding.layoutNoMission.setVisibility(View.GONE);
             binding.layoutMathMission.setVisibility(View.VISIBLE);
             binding.layoutShakeMission.setVisibility(View.GONE);
+            binding.layoutBarcodeMission.setVisibility(View.GONE);
+            binding.tvMissionProgress.setVisibility(View.VISIBLE);
             mathCompletedCount = 0;
             mathRequiredCount = mission.getRequiredCompletions() > 0 ? mission.getRequiredCompletions() : 3;
             mathDifficulty = mission.getDifficulty() > 0 ? mission.getDifficulty() : 1;
             generateMathEquation();
             unregisterShakeSensor();
         } else if ("POWER_SHAKE".equalsIgnoreCase(mission.getMinigame())) {
+            binding.layoutNoMission.setVisibility(View.GONE);
             binding.layoutMathMission.setVisibility(View.GONE);
             binding.layoutShakeMission.setVisibility(View.VISIBLE);
+            binding.layoutBarcodeMission.setVisibility(View.GONE);
+            binding.tvMissionProgress.setVisibility(View.VISIBLE);
             shakeCount = 0;
             shakeRequiredCount = mission.getRequiredCompletions() > 0 ? mission.getRequiredCompletions() : 25;
             binding.tvShakeCounter.setText(String.valueOf(shakeRequiredCount));
             binding.progressShake.setMax(shakeRequiredCount);
             binding.progressShake.setProgress(0);
             registerShakeSensor();
+        } else if ("BARCODE_SCAN".equalsIgnoreCase(mission.getMinigame())) {
+            binding.layoutNoMission.setVisibility(View.GONE);
+            binding.layoutMathMission.setVisibility(View.GONE);
+            binding.layoutShakeMission.setVisibility(View.GONE);
+            binding.layoutBarcodeMission.setVisibility(View.VISIBLE);
+            binding.layoutManualBarcodeEntry.setVisibility(View.GONE);
+            binding.tvMissionProgress.setVisibility(View.VISIBLE);
+            binding.tvMissionProgress.setText("Scan your registered barcode");
+
+            String target = mission.getTargetBarcodeHash();
+            if (target != null && !target.isEmpty()) {
+                binding.tvTargetBarcodeDisplay.setText("Target: " + target);
+            } else {
+                binding.tvTargetBarcodeDisplay.setText("Scan any valid barcode");
+            }
+
+            if (binding.etBarcodeAnswer.getText() != null) {
+                binding.etBarcodeAnswer.getText().clear();
+            }
+            unregisterShakeSensor();
+
+            startEmbeddedBarcodeScanner(target);
         }
     }
 
@@ -337,6 +482,44 @@ public class RingingActivity extends AppCompatActivity implements SensorEventLis
             if (binding.etMathAnswer.getText() != null) {
                 binding.etMathAnswer.getText().clear();
             }
+        }
+    }
+
+    private void checkBarcodeAnswer() {
+        if (binding.etBarcodeAnswer.getText() == null) return;
+        String answer = binding.etBarcodeAnswer.getText().toString().trim();
+        if (answer.isEmpty()) return;
+
+        MissionModel mission = missionQueue.get(currentMissionIndex);
+        String targetHash = mission.getTargetBarcodeHash();
+
+        boolean matched = false;
+        if (targetHash == null || targetHash.trim().isEmpty()) {
+            matched = true;
+        } else {
+            String sha = computeSha256(answer);
+            matched = answer.equalsIgnoreCase(targetHash) || (sha != null && sha.equalsIgnoreCase(targetHash));
+        }
+
+        if (matched) {
+            Toast.makeText(this, "Barcode Verified!", Toast.LENGTH_SHORT).show();
+            startMissionStage(currentMissionIndex + 1);
+        } else {
+            Toast.makeText(this, "Incorrect code! Enter or scan matching barcode.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private String computeSha256(String input) {
+        try {
+            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] digest = md.digest(input.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            for (byte b : digest) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            return null;
         }
     }
 
@@ -423,6 +606,9 @@ public class RingingActivity extends AppCompatActivity implements SensorEventLis
     @Override
     protected void onDestroy() {
         unregisterShakeSensor();
+        if (binding != null && binding.ringingBarcodeScannerView != null) {
+            binding.ringingBarcodeScannerView.pause();
+        }
         super.onDestroy();
     }
 }

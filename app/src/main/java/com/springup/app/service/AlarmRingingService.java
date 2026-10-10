@@ -176,11 +176,20 @@ public class AlarmRingingService extends Service {
             }
 
             if (vibrator != null && vibrator.hasVibrator()) {
-                long[] pattern = {0, 600, 400, 600, 400};
+                long[] timings = {0, 1000, 250, 1000, 250};
+                int[] amplitudes = {0, 255, 0, 255, 0};
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    vibrator.vibrate(VibrationEffect.createWaveform(pattern, 0));
+                    try {
+                        if (vibrator.hasAmplitudeControl()) {
+                            vibrator.vibrate(VibrationEffect.createWaveform(timings, amplitudes, 0));
+                        } else {
+                            vibrator.vibrate(VibrationEffect.createWaveform(timings, 0));
+                        }
+                    } catch (Exception e) {
+                        vibrator.vibrate(VibrationEffect.createWaveform(timings, 0));
+                    }
                 } else {
-                    vibrator.vibrate(pattern, 0);
+                    vibrator.vibrate(timings, 0);
                 }
             }
         }
